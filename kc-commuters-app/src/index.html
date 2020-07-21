@@ -2,192 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src='js/main.js'></script>
-  <script src='https://api.mapbox.com/mapbox-gl-js/v1.11.1/mapbox-gl.js'></script>
-  <link href='https://api.mapbox.com/mapbox-gl-js/v1.11.1/mapbox-gl.css' rel='stylesheet' />
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-  <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
-  <script src='https://code.highcharts.com/highcharts.js'></script>
-
-  <style>
-    body { margin: 2; padding: 2; }
-    #map { position: absolute; top: 0; bottom: 0; width: 25%; }
-  </style>
   <title>KC Commuters App</title>
   <base href="/">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <script src='https://api.mapbox.com/mapbox-gl-js/v1.11.1/mapbox-gl.js'></script>
+  <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/v1.11.1/mapbox-gl.css'/>
+  <link rel='stylesheet' href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"/>
+  <link rel='stylesheet' href='app/app.component.css'/>
+  <script src='https://code.highcharts.com/highcharts.js'></script>
+
   </head>
 <body>
   <app-root></app-root>
-  <div class='container'>
-    <div class='row'>
-      <div id='map'></div>
-      <!--<div class='map-overlay' id='title'><h2>Kansas City Commuter Data</h2></div>
-      <div class='map-overlay' id='legend'></div>-->
-      <div class='col-sm-12 col-md-6' id = 'chart'></div>
-      <div class='col-sm-12 col-md-6' id = 'chartB'></div>
-    </div>
-  </div>
 
 
-
-<script>
-
-  //create map
-  mapboxgl.accessToken = 'pk.eyJ1IjoiamFtaWFuZGVyIiwiYSI6ImNrY3BnMDd1NDBjZHcycm0xanE3eTN1eTIifQ.tFjkEX9kJWXQawtE7Ti9Cw';
-  var map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/jamiander/ckcqo45ht02j91imjgie6lzok',
-    center: [-94.57, 39.09],
-    zoom: 9
-  });
-
-  map.addControl(new mapboxgl.NavigationControl());
-
-  //create legend
-  map.on('load', function() {
-    var layers = ['kc-tracts', 'kc-neighborhoods'];
-    var colors = ['#4d65d1', '#d13d3d'];
-
-    for (i = 0; i < layers.length; i++) {
-      var layer = layers[i];
-      var color = colors[i];
-      var item = document.createElement('div');
-      var key = document.createElement('span');
-      key.className = 'legend-key';
-      key.style.backgroundColor = color;
-
-      var value = document.createElement('span');
-      value.innerHTML = layer;
-      item.appendChild(key);
-      item.appendChild(value);
-      legend.appendChild(item);
-    }
-});
-
-  //pull in json data and create arrays to use in highcharts
-  var json = (function() {
-  var json = null;
-  $.ajax({
-    'async': false,
-    'global': false,
-    'url': "https://raw.githubusercontent.com/jamiander/interview/master/frontend-engineer/kc-neighborhoods.json",
-    'dataType': "json",
-    'success': function(data) {
-      json = data;
-    }
-  });
-  return json;
-})();
-
-var jsonLen = Object.keys(json.features).length;
-var nhIds = new Array();
-var daData = new Array();
-var dcData = new Array();
-var ptData = new Array();
-var wData = new Array();
-
-for (var i = 0; i < jsonLen; i++) {
-  nhIds.push(json.features[i].properties.id);
-  daData.push(json.features[i].properties['pop-commute-drive_alone']);
-  dcData.push(json.features[i].properties['pop-commute-drive_carpool']);
-  ptData.push(json.features[i].properties['pop-commute-public_transit']);
-  wData.push(json.features[i].properties['pop-commute-walk']);
-}
-
-var json2 = (function() {
-  var json2 = null;
-  $.ajax({
-    'async': false,
-    'global': false,
-    'url': "https://raw.githubusercontent.com/jamiander/interview/master/frontend-engineer/kc-tracts.json",
-    'dataType': "json",
-    'success': function(data) {
-      json2 = data;
-    }
-  });
-  return json2;
-})();
-
-var jsonLen = Object.keys(json2.features).length;
-var tractIds = new Array();
-var tractDaData = new Array();
-var tractDcData = new Array();
-var tractPtData = new Array();
-var tractWData = new Array();
-
-for (var i = 0; i < jsonLen; i++) {
-  tractIds.push(json2.features[i].properties.id);
-  tractDaData.push(json2.features[i].properties['pop-commute-drive_alone']);
-  tractDcData.push(json2.features[i].properties['pop-commute-drive_carpool']);
-  tractPtData.push(json2.features[i].properties['pop-commute-public_transit']);
-  tractWData.push(json2.features[i].properties['pop-commute-walk']);
-}
-
-
-
-//create charts
-Highcharts.chart('chart', {
-  chart: {
-     type: 'bar'
-   },
-   plotOptions: {
-     series: {
-       stacking: 'normal'
-     }
-   },
-   yAxis: {
-     categories: nhIds
-   },
-   series: [
-     {name: 'Drive-Alone',
-     data: daData
-     },
-     {name: 'Drive-Carpool',
-     data: dcData
-     },
-     {name: 'Public-Transit',
-     data: ptData
-     },
-     {name: 'Walk',
-     data: wData
-     }
-   ]
-
- })
-
-
-Highcharts.chart('chartB', {
-chart: {
-    type: 'bar'
-  },
-  plotOptions: {
-    series: {
-      stacking: 'normal'
-    }
-  },
-  yAxis: {
-    categories: tractIds
-  },
-  series: [
-    {name: 'Drive-Alone',
-    data: tractDaData
-    },
-    {name: 'Drive-Carpool',
-    data: tractDcData,
-    },
-    {name: 'Public-Transit',
-    data: tractPtData,
-    },
-    {name: 'Walk',
-    data: tractWData,
-    }
-  ]
-
- })
-</script>
-
-
-
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </body>
 </html>
